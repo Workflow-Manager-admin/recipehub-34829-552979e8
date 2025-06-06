@@ -9,7 +9,7 @@ const Color kAccentColor = Color(0xFF388E3C); // green
 const Color kPrimaryDarkColor = Color(0xFFFFA270);   // lighter orange for primary elements on dark
 const Color kSecondaryDarkColor = Color(0xFF222325); // dark grey for backgrounds
 const Color kSurfaceDarkColor = Color(0xFF292C31);   // for cards, surfaces
-const Color kOnPrimaryDark = Color(0xFF222325); // text on primary
+const Color kOnPrimaryDark = Color(0xFF222325);      // text on primary
 const Color kAccentDarkColor = Color(0xFF6DD47E);    // lighter green accent
 
 void main() {
@@ -28,14 +28,15 @@ class RecipeHubApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.light,
         primaryColor: kPrimaryColor,
-        scaffoldBackgroundColor: kSecondaryColor,
+        scaffoldBackgroundColor: Colors.transparent, // for gradient
         colorScheme: ColorScheme.light(
           primary: kPrimaryColor,
           secondary: kAccentColor,
           surface: Colors.white,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: kPrimaryColor,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           foregroundColor: Colors.white,
         ),
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -52,17 +53,18 @@ class RecipeHubApp extends StatelessWidget {
       darkTheme: ThemeData(
         brightness: Brightness.dark,
         primaryColor: kPrimaryDarkColor,
-        scaffoldBackgroundColor: kSecondaryDarkColor,
+        scaffoldBackgroundColor: Colors.transparent, // for gradient
         colorScheme: ColorScheme.dark(
           primary: kPrimaryDarkColor,
           secondary: kAccentDarkColor,
           surface: kSurfaceDarkColor,
         ),
-        appBarTheme: AppBarTheme(
-          backgroundColor: kPrimaryDarkColor,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           foregroundColor: Colors.white,
         ),
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: kAccentDarkColor,
         ),
         bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -71,7 +73,7 @@ class RecipeHubApp extends StatelessWidget {
           unselectedItemColor: Colors.grey[400],
         ),
         cardColor: kSurfaceDarkColor,
-        iconTheme: IconThemeData(color: kAccentDarkColor),
+        iconTheme: const IconThemeData(color: kAccentDarkColor),
       ),
       themeMode: ThemeMode.system, // Responds to system setting by default
       home: const RecipeHubHomePage(),
@@ -89,39 +91,83 @@ class RecipeHubHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('RecipeHub'),
-      ),
-      body: Center(
-        child: Text(
-          'Welcome to RecipeHub!',
-          style: TextStyle(
-            fontSize: 24,
-            color: theme.colorScheme.primary,
+    final brightness = theme.brightness;
+    final bool isDark = brightness == Brightness.dark;
+    final ColorScheme colorScheme = theme.colorScheme;
+
+    // Gradient that adapts to theme for background
+    final Gradient backgroundGradient = isDark
+        ? LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              kPrimaryDarkColor.withAlpha((0.85 * 255).toInt()),
+              kSecondaryDarkColor.withAlpha((0.95 * 255).toInt()),
+              kAccentDarkColor.withAlpha((0.85 * 255).toInt()),
+            ],
+            stops: const [0.05, 0.7, 1.0],
+          )
+        : LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [
+              kPrimaryColor.withAlpha((0.90 * 255).toInt()),
+              kSecondaryColor.withAlpha((0.90 * 255).toInt()),
+              kAccentColor.withAlpha((0.70 * 255).toInt()),
+            ],
+            stops: const [0.03, 0.7, 1],
+          );
+
+    return Stack(
+      children: [
+        // Gradient background container covers the whole screen
+        Container(
+          decoration: BoxDecoration(
+            gradient: backgroundGradient,
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        // Pages not implemented; icons shown for concept
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home), label: 'Home'
+        // Scaffold is transparent so gradient shows behind all content
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: const Text('RecipeHub'),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
           ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.favorite), label: 'Favorites'
+          body: Center(
+            child: Text(
+              'Welcome to RecipeHub!',
+              style: TextStyle(
+                fontSize: 24,
+                color: isDark
+                    ? Colors.white
+                    : colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.add), label: 'Add Recipe'
+          bottomNavigationBar: BottomNavigationBar(
+            // Pages not implemented; icons shown for concept
+            items: const [
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.home), label: 'Home'
+              ),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.favorite), label: 'Favorites'
+              ),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.add), label: 'Add Recipe'
+              ),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.person), label: 'Profile'
+              ),
+            ],
+            currentIndex: 0, // Highlight Home for now
+            onTap: (_) {},
+            type: BottomNavigationBarType.fixed,
           ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person), label: 'Profile'
-          ),
-        ],
-        currentIndex: 0, // Highlight Home for now
-        onTap: (_) {},
-        type: BottomNavigationBarType.fixed,
-      ),
+        ),
+      ],
     );
   }
 }
